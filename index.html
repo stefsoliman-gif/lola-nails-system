@@ -248,7 +248,7 @@ const DEFAULT_SERVICES = [
   { id:'svc4', name:'ريفيل', price:280 },
 ];
 
-let state = { services: [], appts: [], tab: 'appointments', filter: 'month', ready:false };
+let state = { services: [], appts: [], bookingSettings: null, tab: 'appointments', filter: 'month', ready:false };
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 function todayStr(){
@@ -289,6 +289,11 @@ async function loadData(){
   db.collection('appointments').onSnapshot((snap)=>{
     state.appts = snap.docs.map(d=>({ id: d.id, ...d.data() }));
     state.ready = true;
+    render();
+  }, err=>{ showToast('تعذر الاتصال بقاعدة البيانات'); });
+
+  db.collection('settings').doc('booking').onSnapshot((doc)=>{
+    state.bookingSettings = doc.exists ? doc.data() : null;
     render();
   }, err=>{ showToast('تعذر الاتصال بقاعدة البيانات'); });
 }
@@ -489,6 +494,29 @@ function renderServices(){
     </div>`;
   });
   html += `<button class="btn btn-gold btn-block" data-action="add-service" style="margin-top:10px;">+ إضافة خدمة جديدة</button>`;
+  const bs = state.bookingSettings || {};
+  html += `
+    <div class="section-title" style="margin-top:22px;"><h2>فترة الحجز أونلاين</h2></div>
+    <div class="card">
+      <div style="font-size:13px; color:var(--green); opacity:.8; margin-bottom:14px; line-height:1.6;">
+        حددي الفترة والمواعيد المتاحة للحجز من صفحة الحجز الخاصة بالعميلات. أي حجز برة الفترة أو الأوقات دي مش هيظهر كخيار متاح.
+      </div>
+      <div class="field"><label>من تاريخ</label><input type="date" id="bs-start-date" value="${bs.startDate || todayStr()}"></div>
+      <div class="field"><label>لحد تاريخ</label><input type="date" id="bs-end-date" value="${bs.endDate || ''}"></div>
+      <div class="field"><label>من الساعة</label><input type="time" id="bs-start-time" value="${bs.startTime || '10:00'}"></div>
+      <div class="field"><label>لحد الساعة</label><input type="time" id="bs-end-time" value="${bs.endTime || '17:00'}"></div>
+      <div class="field">
+        <label>مدة كل ميعاد</label>
+        <select id="bs-slot-minutes">
+          <option value="30" ${bs.slotMinutes===30?'selected':''}>30 دقيقة</option>
+          <option value="45" ${bs.slotMinutes===45?'selected':''}>45 دقيقة</option>
+          <option value="60" ${(!bs.slotMinutes || bs.slotMinutes===60)?'selected':''}>60 دقيقة</option>
+          <option value="90" ${bs.slotMinutes===90?'selected':''}>90 دقيقة</option>
+        </select>
+      </div>
+      <button class="btn btn-gold btn-block" data-action="save-booking-settings">حفظ فترة الحجز</button>
+      ${bs.startDate ? `<div style="font-size:12px; color:var(--green); opacity:.7; margin-top:10px; text-align:center;">الحجز متاح حاليًا حتى ${fmtDateHuman(bs.endDate)}</div>` : `<div style="font-size:12px; color:var(--maroon); margin-top:10px; text-align:center;">الحجز أونلاين مقفول لحد ما تحددي الفترة</div>`}
+    </div>`;
   html += `
     <div class="section-title" style="margin-top:22px;"><h2>النسخ الاحتياطي</h2></div>
     <div class="card">
@@ -506,11 +534,13 @@ function renderServices(){
 function escapeHtml(str){
   return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
-function openWhatsApp(phone, message){
+function openWhatsApp(phone, message, winHandle){
   let p = String(phone).replace(/[^\d]/g,'');
   if(p.startsWith('0')) p = '2' + p;
   else if(!p.startsWith('20')) p = '20' + p;
-  window.open(`https://wa.me/${p}?text=${encodeURIComponent(message)}`, '_blank');
+  const url = `https://wa.me/${p}?text=${encodeURIComponent(message)}`;
+  if(winHandle && !winHandle.closed){ winHandle.location.href = url; }
+  else{ window.open(url, '_blank'); }
 }
 
 /* ---------- modal ---------- */
@@ -664,26 +694,28 @@ function attachDynamicHandlers(){
   document.querySelectorAll('[data-action="accept-booking"]').forEach(b=>{
     b.onclick = async ()=>{
       const a = state.appts.find(x=>x.id===b.dataset.id);
+      const waWin = (a && a.phone) ? window.open('', '_blank') : null;
       try{
         await db.collection('appointments').doc(b.dataset.id).update({ status:'upcoming' });
         showToast('تم قبول الحجز');
         if(a && a.phone){
-          openWhatsApp(a.phone, `اهلاً ${a.name} 💚 تم تأكيد ميعادك في LOLA Nail Studio يوم ${fmtDateHuman(a.date)}${a.time? ' الساعة ' + a.time : ''}. في انتظارك!`);
+          openWhatsApp(a.phone, `اهلاً ${a.name} 💚 تم تأكيد ميعادك في LOLA Nail Studio يوم ${fmtDateHuman(a.date)}${a.time? ' الساعة ' + a.time : ''}. في انتظارك!`, waWin);
         }
-      }catch(e){ showToast('حصل خطأ'); }
+      }catch(e){ showToast('حصل خطأ'); if(waWin) waWin.close(); }
     };
   });
   document.querySelectorAll('[data-action="reject-booking"]').forEach(b=>{
     b.onclick = ()=>{
       const a = state.appts.find(x=>x.id===b.dataset.id);
       confirmAction('تأكيد رفض هذا الحجز؟', async ()=>{
+        const waWin = (a && a.phone) ? window.open('', '_blank') : null;
         try{
           await db.collection('appointments').doc(b.dataset.id).update({ status:'cancelled' });
           showToast('تم رفض الحجز');
           if(a && a.phone){
-            openWhatsApp(a.phone, `اهلاً ${a.name}، للأسف مش هيكون في إمكانية تأكيد ميعادك يوم ${fmtDateHuman(a.date)}${a.time? ' الساعة ' + a.time : ''} في LOLA Nail Studio. تقدري تختاري ميعاد تاني من رابط الحجز وهنكون سعداء بخدمتك 💚`);
+            openWhatsApp(a.phone, `اهلاً ${a.name}، للأسف مش هيكون في إمكانية تأكيد ميعادك يوم ${fmtDateHuman(a.date)}${a.time? ' الساعة ' + a.time : ''} في LOLA Nail Studio. تقدري تختاري ميعاد تاني من رابط الحجز وهنكون سعداء بخدمتك 💚`, waWin);
           }
-        }catch(e){ showToast('حصل خطأ'); }
+        }catch(e){ showToast('حصل خطأ'); if(waWin) waWin.close(); }
       });
     };
   });
@@ -713,6 +745,21 @@ function attachDynamicHandlers(){
   if(exportBtn) exportBtn.onclick = exportBackup;
   const importBtn = document.querySelector('[data-action="import-backup"]');
   if(importBtn) importBtn.onclick = openImportModal;
+
+  const saveBookingBtn = document.querySelector('[data-action="save-booking-settings"]');
+  if(saveBookingBtn) saveBookingBtn.onclick = async ()=>{
+    const startDate = document.getElementById('bs-start-date').value;
+    const endDate = document.getElementById('bs-end-date').value;
+    const startTime = document.getElementById('bs-start-time').value;
+    const endTime = document.getElementById('bs-end-time').value;
+    const slotMinutes = Number(document.getElementById('bs-slot-minutes').value);
+    if(!startDate || !endDate || !startTime || !endTime){ showToast('كمّلي كل الحقول'); return; }
+    if(endDate < startDate){ showToast('تاريخ النهاية لازم يكون بعد تاريخ البداية'); return; }
+    try{
+      await db.collection('settings').doc('booking').set({ startDate, endDate, startTime, endTime, slotMinutes });
+      showToast('تم حفظ فترة الحجز');
+    }catch(e){ showToast('حصل خطأ في الحفظ'); }
+  };
 
   document.querySelectorAll('.chip').forEach(c=>{
     c.onclick = ()=>{ state.filter = c.dataset.filter; render(); };
