@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>LOLA Nail Studio — نظام الإدارة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --marble:#F3EEE2;
+    --marble-deep:#E9DFC9;
+    --paper:#FFFCF5;
+    --ink:#1B2E22;
+    --green:#173226;
+    --green-deep:#0F211A;
+    --gold:#C7A24A;
+    --gold-light:#E7D9A9;
+    --gold-dark:#8F7126;
+    --maroon:#7C2430;
+    --line: rgba(199,162,74,0.35);
+    --shadow: 0 10px 30px rgba(23,50,38,0.12);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--green-deep);}
+  body{
+    font-family:'Cairo',sans-serif;
+    color:var(--ink);
+    display:flex; justify-content:center;
+    min-height:100vh;
+  }
+  #app{
+    width:100%; max-width:480px; min-height:100vh;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(199,162,74,0.10), transparent 40%),
+      var(--marble);
+    display:flex; flex-direction:column;
+    position:relative;
+    box-shadow: var(--shadow);
+  }
+  /* ---------- header ---------- */
+  .topbar{
+    padding: 18px 20px 14px;
+    background: linear-gradient(180deg, var(--marble) 0%, var(--marble) 80%, transparent);
+    border-bottom: 1px solid var(--line);
+    text-align:center;
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{
+    font-family:'Cormorant Garamond', serif;
+    font-size: 30px; font-weight:600; letter-spacing:2px;
+    color: var(--gold-dark);
+    background: linear-gradient(180deg, #E6CC85, #9C7C2E);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    line-height:1;
+  }
+  .brand-sub{
+    margin-top:4px;
+    font-size:11px; letter-spacing:3px; color:var(--green);
+    font-weight:600;
+  }
+  .topbar .divider{
+    width:70px; height:1px; background:var(--gold); opacity:.6; margin:8px auto 0;
+  }
+  /* ---------- content ---------- */
+  main{ flex:1; padding: 16px 16px 100px; }
+  .section-title{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin: 4px 2px 12px;
+  }
+  .section-title h2{
+    font-size:18px; margin:0; color:var(--green-deep); font-weight:800;
+  }
+  .section-title span{ font-size:12px; color:var(--gold-dark); font-weight:600; }
+
+  /* stat badges (echoes the poster's price medallions) */
+  .stat-row{ display:flex; gap:12px; margin-bottom:16px; }
+  .stat-badge{
+    flex:1; background: radial-gradient(circle at 30% 25%, #FBF3DD, #E9D6A0 65%, #C9A24A 100%);
+    border-radius:16px; padding:14px 10px; text-align:center;
+    border:1px solid var(--gold); box-shadow: inset 0 0 0 1px rgba(255,255,255,.4), var(--shadow);
+  }
+  .stat-badge .num{ font-size:22px; font-weight:800; color:var(--green-deep); display:block; }
+  .stat-badge .lbl{ font-size:11px; color:var(--gold-dark); font-weight:700; letter-spacing:1px; }
+
+  /* cards */
+  .card{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:14px 14px; margin-bottom:10px; box-shadow: 0 4px 14px rgba(23,50,38,0.06);
+  }
+  .card.upcoming{ border-right:4px solid var(--gold); }
+  .card.done{ border-right:4px solid var(--green); opacity:.92; }
+  .card-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .cust-name{ font-weight:800; font-size:15px; color:var(--green-deep); }
+  .svc-chip{
+    display:inline-flex; align-items:center; gap:6px; margin-top:4px;
+    font-size:12px; color:var(--green); background:var(--gold-light);
+    border:1px solid var(--gold); padding:3px 10px; border-radius:20px; font-weight:700;
+  }
+  .price-tag{ font-size:14px; font-weight:800; color:var(--maroon); white-space:nowrap; }
+  .meta-row{ display:flex; gap:14px; margin-top:8px; font-size:12px; color:#5b6b60; }
+  .meta-row b{ color:var(--green-deep); }
+  .card-actions{ display:flex; gap:8px; margin-top:10px; }
+  .btn{
+    border:none; cursor:pointer; font-family:inherit; font-weight:700; border-radius:10px;
+    padding:8px 14px; font-size:12.5px; transition:transform .1s ease;
+  }
+  .btn:active{ transform:scale(.96); }
+  .btn-done{ background:var(--green-deep); color:#F3EEE2; }
+  .btn-ghost{ background:transparent; color:var(--maroon); border:1px solid rgba(124,36,48,.35); }
+  .btn-gold{ background:linear-gradient(180deg,#E6CC85,#B98F3A); color:var(--green-deep); }
+  .btn-outline{ background:transparent; border:1px solid var(--gold); color:var(--gold-dark); }
+  .btn-block{ width:100%; text-align:center; }
+
+  .empty{
+    text-align:center; color:#7c8b81; font-size:13px; padding:36px 10px;
+    border:1px dashed var(--gold); border-radius:14px; background:rgba(255,255,255,.4);
+  }
+
+  .subhead{ font-size:12px; font-weight:700; color:var(--gold-dark); margin:18px 2px 8px; letter-spacing:.5px; }
+
+  /* chips row (filters) */
+  .chip-row{ display:flex; gap:8px; margin-bottom:14px; }
+  .chip{
+    flex:1; text-align:center; padding:7px 0; border-radius:20px; font-size:12px; font-weight:700;
+    border:1px solid var(--gold); color:var(--gold-dark); background:transparent; cursor:pointer;
+  }
+  .chip.active{ background:var(--green-deep); color:#F3EEE2; border-color:var(--green-deep); }
+
+  /* breakdown rows */
+  .brk-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px; }
+  .brk-row:last-child{ border-bottom:none; }
+  .brk-name{ display:flex; align-items:center; gap:8px; font-weight:700; color:var(--green-deep); }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--gold); }
+  .brk-sub{ color:#7c8b81; font-size:11px; }
+
+  /* services settings rows */
+  .svc-row{ display:flex; align-items:center; justify-content:space-between; }
+  .svc-row .left{ font-weight:700; color:var(--green-deep); }
+  .svc-row .price{ color:var(--maroon); font-weight:800; }
+
+  /* FAB */
+  .fab{
+    position:absolute; left:18px; bottom:88px; width:52px; height:52px; border-radius:50%;
+    background:linear-gradient(180deg,#E6CC85,#9C7C2E); color:var(--green-deep);
+    display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:800;
+    box-shadow: var(--shadow); border:2px solid var(--paper); cursor:pointer; z-index:15;
+  }
+  .fab:active{ transform:scale(.94); }
+
+  /* bottom nav */
+  nav.bottomnav{
+    position:sticky; bottom:0; z-index:20;
+    background: var(--green-deep); border-top:1px solid var(--gold-dark);
+    display:flex; padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  nav.bottomnav button{
+    flex:1; background:none; border:none; color:#B9C7BC; display:flex; flex-direction:column;
+    align-items:center; gap:4px; font-family:inherit; font-size:11px; font-weight:700; padding:6px 0;
+    cursor:pointer; border-radius:10px;
+  }
+  nav.bottomnav button.active{ color:var(--gold); background:rgba(199,162,74,0.12); }
+  nav.bottomnav svg{ width:20px; height:20px; }
+
+  /* modal */
+  .overlay{
+    position:fixed; inset:0; background:rgba(15,33,26,0.55); display:flex; align-items:flex-end;
+    justify-content:center; z-index:50;
+  }
+  .sheet{
+    width:100%; max-width:480px; background:var(--paper); border-radius:20px 20px 0 0;
+    padding:18px 18px calc(18px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto;
+    box-shadow: 0 -10px 30px rgba(0,0,0,.25); animation:up .18s ease-out;
+  }
+  @keyframes up{ from{ transform:translateY(30px); opacity:0;} to{ transform:translateY(0); opacity:1;} }
+  .sheet h3{ margin:2px 0 14px; color:var(--green-deep); font-size:16px; font-weight:800; }
+  .field{ margin-bottom:12px; }
+  .field label{ display:block; font-size:12px; font-weight:700; color:var(--gold-dark); margin-bottom:5px; }
+  .field input, .field select{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+    background:#fff; font-family:inherit; font-size:14px; color:var(--ink);
+  }
+  .field input:focus, .field select:focus{ outline:2px solid var(--gold); }
+  .sheet-actions{ display:flex; gap:10px; margin-top:6px; }
+  .sheet-actions .btn{ flex:1; padding:11px 0; font-size:13.5px; }
+
+  .toast{
+    position:fixed; bottom:96px; left:50%; transform:translateX(-50%);
+    background:var(--green-deep); color:#F3EEE2; padding:10px 18px; border-radius:20px;
+    font-size:13px; font-weight:700; z-index:60; box-shadow:var(--shadow);
+    opacity:0; pointer-events:none; transition:opacity .25s ease;
+  }
+  .toast.show{ opacity:1; }
+
+  .loading{ text-align:center; padding:60px 0; color:var(--gold-dark); font-weight:700; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand">LOLA</div>
+    <div class="brand-sub">NAIL STUDIO — نظام الإدارة</div>
+    <div class="divider"></div>
+  </div>
+  <main id="content"><div class="loading">جاري تحميل البيانات…</div></main>
+  <div class="fab" id="fab" title="إضافة">+</div>
+  <nav class="bottomnav">
+    <button data-tab="appointments">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+      المواعيد
+    </button>
+    <button data-tab="revenue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.4 1.3-2.5 3-2.5s3 .9 3 2c0 2.5-6 1-6 3.5 0 1.1 1.3 2 3 2s3-1.1 3-2.5"/></svg>
+      الدخل
+    </button>
+    <button data-tab="services">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.9 7.9 0 000-2l2-1.5-2-3.4-2.3.9a8 8 0 00-1.7-1L15 3h-6l-.4 2.6a8 8 0 00-1.7 1l-2.3-.9-2 3.4L4.6 11a7.9 7.9 0 000 2l-2 1.5 2 3.4 2.3-.9c.5.4 1.1.8 1.7 1L9 21h6l.4-2.6a8 8 0 001.7-1l2.3.9 2-3.4-2-1.5z"/></svg>
+      الخدمات
+    </button>
+  </nav>
+  <div class="toast" id="toast"></div>
+  <div id="modal-root"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBIFGzgjTtSWUgWMd-4muQv3lSKcLnRhlI",
+    authDomain: "lola-nails-a5ff7.firebaseapp.com",
+    projectId: "lola-nails-a5ff7",
+    storageBucket: "lola-nails-a5ff7.firebasestorage.app",
+    messagingSenderId: "895114975189",
+    appId: "1:895114975189:web:707d18aee13ac452814f5c"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+<script>
+const STORE = {
+  SERVICES: 'lola_services',
+  APPTS: 'lola_appointments'
+};
+const DEFAULT_SERVICES = [
+  { id:'svc1', name:'هارد جيل', price:300 },
+  { id:'svc2', name:'شيلاك', price:250 },
+  { id:'svc3', name:'تقوية / علاج', price:280 },
+  { id:'svc4', name:'ريفيل', price:280 },
+];
+
+let state = { services: [], appts: [], tab: 'appointments', filter: 'month', ready:false };
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function monthPrefix(dateStr){ return dateStr.slice(0,7); }
+function money(n){ return Number(n||0).toLocaleString('en-US') + ' جنيه'; }
+function fmtDateHuman(dateStr){
+  if(!dateStr) return '';
+  const [y,m,d] = dateStr.split('-');
+  const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  return `${d} ${months[parseInt(m,10)-1]} ${y}`;
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+async function loadData(){
+  db.collection('services').onSnapshot(async (snap)=>{
+    if(snap.empty){
+      try{
+        const batch = db.batch();
+        DEFAULT_SERVICES.forEach(s=>{
+          batch.set(db.collection('services').doc(s.id), {name:s.name, price:s.price});
+        });
+        await batch.commit();
+      }catch(e){ showToast('تعذر الاتصال بقاعدة البيانات'); }
+      return;
+    }
+    state.services = snap.docs.map(d=>({ id: d.id, ...d.data() }));
+    state.ready = true;
+    render();
+  }, err=>{ showToast('تعذر الاتصال بقاعدة البيانات'); });
+
+  db.collection('appointments').onSnapshot((snap)=>{
+    state.appts = snap.docs.map(d=>({ id: d.id, ...d.data() }));
+    state.ready = true;
+    render();
+  }, err=>{ showToast('تعذر الاتصال بقاعدة البيانات'); });
+}
+
+/* ---------- render router ---------- */
+function render(){
+  document.querySelectorAll('.bottomnav button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tab === state.tab);
+  });
+  document.getElementById('fab').style.display = state.tab === 'services' ? 'none' : 'flex';
+  const main = document.getElementById('content');
+  if(!state.ready){ main.innerHTML = '<div class="loading">جاري تحميل البيانات…</div>'; return; }
+  if(state.tab === 'appointments') main.innerHTML = renderAppointments();
+  else if(state.tab === 'revenue') main.innerHTML = renderRevenue();
+  else main.innerHTML = renderServices();
+  attachDynamicHandlers();
+}
+
+/* ---------- appointments tab ---------- */
+function renderAppointments(){
+  const today = todayStr();
+  const pending = state.appts.filter(a=>a.status==='pending').sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+  const upcoming = state.appts.filter(a=>a.status==='upcoming').sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+  const doneToday = state.appts.filter(a=>a.status==='done' && a.date===today).length;
+  const upcomingToday = state.appts.filter(a=>a.status==='upcoming' && a.date===today).length;
+
+  let html = `
+  <div class="stat-row">
+    <div class="stat-badge"><span class="num">${upcomingToday}</span><span class="lbl">مواعيد النهارده</span></div>
+    <div class="stat-badge"><span class="num">${doneToday}</span><span class="lbl">تم تنفيذه النهارده</span></div>
+  </div>`;
+
+  if(pending.length){
+    html += `<div class="section-title"><h2>طلبات حجز جديدة</h2><span>${pending.length}</span></div>`;
+    pending.forEach(a=>{
+      html += `
+      <div class="card upcoming" style="border-color:var(--gold);">
+        <div class="card-top">
+          <div>
+            <div class="cust-name">${escapeHtml(a.name)} <span style="font-size:11px;color:var(--gold-dark);border:1px solid var(--line);border-radius:20px;padding:1px 8px;margin-right:6px;">🌐 حجز أونلاين</span></div>
+            <span class="svc-chip">${escapeHtml(a.serviceName || '—')}</span>
+          </div>
+          <div class="price-tag">${money(a.price)}</div>
+        </div>
+        <div class="meta-row">
+          <div>📅 <b>${fmtDateHuman(a.date)}</b></div>
+          <div>⏰ <b>${a.time || '—'}</b></div>
+          ${a.phone ? `<div>📞 <b>${escapeHtml(a.phone)}</b></div>` : ''}
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-done" data-action="accept-booking" data-id="${a.id}">✅ قبول</button>
+          <button class="btn btn-ghost" data-action="reject-booking" data-id="${a.id}">❌ رفض</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  html += `<div class="section-title"><h2>المواعيد القادمة</h2><span>${upcoming.length}</span></div>`;
+
+  if(upcoming.length===0){
+    html += `<div class="empty">لا يوجد مواعيد قادمة حالياً<br>اضغطي على + لإضافة موعد جديد</div>`;
+  } else {
+    upcoming.forEach(a=>{
+      const svc = state.services.find(s=>s.id===a.serviceId);
+      html += `
+      <div class="card upcoming">
+        <div class="card-top">
+          <div>
+            <div class="cust-name">${escapeHtml(a.name)} ${a.source==='online' ? '<span style="font-size:11px;color:var(--gold-dark);border:1px solid var(--line);border-radius:20px;padding:1px 8px;margin-right:6px;">🌐 حجز أونلاين</span>' : ''}</div>
+            <span class="svc-chip">${escapeHtml(svc? svc.name : a.serviceName || '—')}</span>
+          </div>
+          <div class="price-tag">${svc? money(svc.price): ''}</div>
+        </div>
+        <div class="meta-row">
+          <div>📅 <b>${fmtDateHuman(a.date)}</b></div>
+          <div>⏰ <b>${a.time || '—'}</b></div>
+          ${a.phone ? `<div>📞 <b>${escapeHtml(a.phone)}</b></div>` : ''}
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-done" data-action="complete" data-id="${a.id}">تم ✓</button>
+          <button class="btn btn-ghost" data-action="delete-appt" data-id="${a.id}">حذف</button>
+        </div>
+      </div>`;
+    });
+  }
+
+  const doneList = state.appts.filter(a=>a.status==='done').sort((a,b)=> b.date.localeCompare(a.date)).slice(0,8);
+  html += `<div class="subhead">آخر العمليات المنفذة</div>`;
+  if(doneList.length===0){
+    html += `<div class="empty">لسه مفيش عمليات متسجلة</div>`;
+  } else {
+    doneList.forEach(a=>{
+      html += `
+      <div class="card done">
+        <div class="card-top">
+          <div>
+            <div class="cust-name">${escapeHtml(a.name)}</div>
+            <span class="svc-chip">${escapeHtml(a.serviceName)}</span>
+          </div>
+          <div class="price-tag">${money(a.price)}</div>
+        </div>
+        <div class="meta-row"><div>📅 <b>${fmtDateHuman(a.date)}</b></div></div>
+      </div>`;
+    });
+  }
+  return html;
+}
+
+/* ---------- revenue tab ---------- */
+function renderRevenue(){
+  const today = todayStr();
+  const thisMonth = monthPrefix(today);
+  const doneAll = state.appts.filter(a=>a.status==='done');
+  const todayTotal = doneAll.filter(a=>a.date===today).reduce((s,a)=>s+Number(a.price||0),0);
+  const monthTotal = doneAll.filter(a=>monthPrefix(a.date)===thisMonth).reduce((s,a)=>s+Number(a.price||0),0);
+
+  let filtered;
+  if(state.filter==='today') filtered = doneAll.filter(a=>a.date===today);
+  else if(state.filter==='month') filtered = doneAll.filter(a=>monthPrefix(a.date)===thisMonth);
+  else filtered = doneAll.slice();
+  filtered.sort((a,b)=> b.date.localeCompare(a.date));
+
+  const breakdown = {};
+  filtered.forEach(a=>{
+    breakdown[a.serviceName] = breakdown[a.serviceName] || {count:0,total:0};
+    breakdown[a.serviceName].count++;
+    breakdown[a.serviceName].total += Number(a.price||0);
+  });
+
+  let html = `
+  <div class="stat-row">
+    <div class="stat-badge"><span class="num">${todayTotal}</span><span class="lbl">دخل النهارده</span></div>
+    <div class="stat-badge"><span class="num">${monthTotal}</span><span class="lbl">دخل الشهر</span></div>
+  </div>
+  <div class="chip-row">
+    <div class="chip ${state.filter==='today'?'active':''}" data-filter="today">اليوم</div>
+    <div class="chip ${state.filter==='month'?'active':''}" data-filter="month">هذا الشهر</div>
+    <div class="chip ${state.filter==='all'?'active':''}" data-filter="all">الكل</div>
+  </div>
+  <div class="section-title"><h2>توزيع الخدمات</h2></div>
+  <div class="card">`;
+
+  const keys = Object.keys(breakdown);
+  if(keys.length===0){
+    html += `<div style="text-align:center;color:#7c8b81;font-size:13px;padding:8px 0;">لا يوجد عمليات في هذه الفترة</div>`;
+  } else {
+    keys.forEach(k=>{
+      html += `
+      <div class="brk-row">
+        <div class="brk-name"><span class="dot"></span>${escapeHtml(k)}</div>
+        <div style="text-align:left">
+          <div>${money(breakdown[k].total)}</div>
+          <div class="brk-sub">${breakdown[k].count} عملية</div>
+        </div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
+
+  html += `<div class="section-title"><h2>سجل العمليات</h2><span>${filtered.length}</span></div>`;
+  if(filtered.length===0){
+    html += `<div class="empty">لا يوجد سجل في هذه الفترة</div>`;
+  } else {
+    filtered.forEach(a=>{
+      html += `
+      <div class="card done">
+        <div class="card-top">
+          <div>
+            <div class="cust-name">${escapeHtml(a.name)}</div>
+            <span class="svc-chip">${escapeHtml(a.serviceName)}</span>
+          </div>
+          <div class="price-tag">${money(a.price)}</div>
+        </div>
+        <div class="meta-row"><div>📅 <b>${fmtDateHuman(a.date)}</b></div></div>
+        <div class="card-actions">
+          <button class="btn btn-ghost" data-action="delete-appt" data-id="${a.id}">حذف من السجل</button>
+        </div>
+      </div>`;
+    });
+  }
+  return html;
+}
+
+/* ---------- services tab ---------- */
+function renderServices(){
+  let html = `<div class="section-title"><h2>الخدمات والأسعار</h2><span>${state.services.length}</span></div>`;
+  state.services.forEach(s=>{
+    html += `
+    <div class="card">
+      <div class="svc-row">
+        <div class="left">${escapeHtml(s.name)}</div>
+        <div class="price">${money(s.price)}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-outline" data-action="edit-service" data-id="${s.id}">تعديل السعر</button>
+        <button class="btn btn-ghost" data-action="delete-service" data-id="${s.id}">حذف</button>
+      </div>
+    </div>`;
+  });
+  html += `<button class="btn btn-gold btn-block" data-action="add-service" style="margin-top:10px;">+ إضافة خدمة جديدة</button>`;
+  html += `
+    <div class="section-title" style="margin-top:22px;"><h2>النسخ الاحتياطي</h2></div>
+    <div class="card">
+      <div style="font-size:13px; color:var(--green); opacity:.8; margin-bottom:10px; line-height:1.6;">
+        احفظي نسخة من بيانات الصالون بشكل دوري على جهازك، عشان لو حصل أي مشكلة تقدري ترجعي بيها كل حاجة تاني.
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-outline" data-action="export-backup">تصدير نسخة احتياطية</button>
+        <button class="btn btn-ghost" data-action="import-backup">استعادة نسخة</button>
+      </div>
+    </div>`;
+  return html;
+}
+
+function escapeHtml(str){
+  return String(str==null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function openWhatsApp(phone, message){
+  let p = String(phone).replace(/[^\d]/g,'');
+  if(p.startsWith('0')) p = '2' + p;
+  else if(!p.startsWith('20')) p = '20' + p;
+  window.open(`https://wa.me/${p}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+/* ---------- modal ---------- */
+function openModal(html){
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `<div class="overlay" id="overlay"><div class="sheet">${html}</div></div>`;
+  document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeModal(); });
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML = ''; }
+
+function confirmAction(message, onConfirm){
+  openModal(`
+    <h3>تأكيد</h3>
+    <div style="font-size:14px; color:var(--ink); margin:8px 0 18px; line-height:1.6;">${escapeHtml(message)}</div>
+    <div class="sheet-actions">
+      <button class="btn btn-gold" id="confirm-yes-btn">تأكيد</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>
+  `);
+  document.getElementById('confirm-yes-btn').onclick = async ()=>{
+    closeModal();
+    await onConfirm();
+  };
+}
+
+function serviceOptions(selectedId){
+  return state.services.map(s=>`<option value="${s.id}" ${s.id===selectedId?'selected':''}>${escapeHtml(s.name)} — ${s.price} جنيه</option>`).join('');
+}
+
+function openAppointmentModal(){
+  openModal(`
+    <h3>موعد جديد</h3>
+    <div class="field"><label>اسم العميل</label><input id="f-name" placeholder="اكتبي اسم العميلة"></div>
+    <div class="field"><label>رقم الموبايل (اختياري)</label><input id="f-phone" placeholder="01xxxxxxxxx"></div>
+    <div class="field"><label>الخدمة</label><select id="f-service">${serviceOptions()}</select></div>
+    <div class="field"><label>التاريخ</label><input type="date" id="f-date" value="${todayStr()}"></div>
+    <div class="field"><label>الساعة</label><input type="time" id="f-time"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-gold" id="save-appt">حفظ الموعد</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>
+  `);
+  document.getElementById('save-appt').onclick = async ()=>{
+    const name = document.getElementById('f-name').value.trim();
+    const date = document.getElementById('f-date').value;
+    const time = document.getElementById('f-time').value;
+    if(!name || !date){ showToast('اكتبي الاسم والتاريخ'); return; }
+    if(time){
+      const clash = state.appts.find(a=>
+        a.date === date && a.time === time && a.status !== 'cancelled'
+      );
+      if(clash){
+        showToast(`الميعاد ده محجوز بالفعل (${clash.name})`);
+        return;
+      }
+    }
+    const svcId = document.getElementById('f-service').value;
+    const svc = state.services.find(s=>s.id===svcId);
+    try{
+      await db.collection('appointments').add({
+        name, phone: document.getElementById('f-phone').value.trim(),
+        serviceId: svcId, serviceName: svc? svc.name : '—',
+        date, time,
+        status:'upcoming', price: svc? svc.price : 0, source:'admin'
+      });
+      closeModal(); showToast('تم حفظ الموعد');
+    }catch(e){ showToast('حصل خطأ في الحفظ'); }
+  };
+}
+
+function openWalkinModal(){
+  openModal(`
+    <h3>تسجيل عملية سريعة</h3>
+    <div class="field"><label>اسم العميل (اختياري)</label><input id="w-name" placeholder="عميلة"></div>
+    <div class="field"><label>الخدمة</label><select id="w-service">${serviceOptions()}</select></div>
+    <div class="field"><label>السعر</label><input type="number" id="w-price" value="${state.services[0]? state.services[0].price:0}"></div>
+    <div class="field"><label>التاريخ</label><input type="date" id="w-date" value="${todayStr()}"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-gold" id="save-walkin">تسجيل</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>
+  `);
+  const svcSel = document.getElementById('w-service');
+  svcSel.onchange = ()=>{
+    const svc = state.services.find(s=>s.id===svcSel.value);
+    document.getElementById('w-price').value = svc? svc.price : 0;
+  };
+  document.getElementById('save-walkin').onclick = async ()=>{
+    const svc = state.services.find(s=>s.id===svcSel.value);
+    const date = document.getElementById('w-date').value || todayStr();
+    try{
+      await db.collection('appointments').add({
+        name: document.getElementById('w-name').value.trim() || 'عميلة',
+        phone:'', serviceId: svc? svc.id:'', serviceName: svc? svc.name:'—',
+        date, time:'', status:'done', price: Number(document.getElementById('w-price').value)||0, source:'admin'
+      });
+      closeModal(); showToast('تم تسجيل العملية');
+    }catch(e){ showToast('حصل خطأ في الحفظ'); }
+  };
+}
+
+function openCompleteModal(id){
+  const a = state.appts.find(x=>x.id===id);
+  if(!a) return;
+  openModal(`
+    <h3>تأكيد تنفيذ الخدمة</h3>
+    <div class="field"><label>العميل</label><input value="${escapeHtml(a.name)}" disabled></div>
+    <div class="field"><label>السعر النهائي</label><input type="number" id="c-price" value="${a.price}"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-gold" id="confirm-complete">تأكيد ✓</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>
+  `);
+  document.getElementById('confirm-complete').onclick = async ()=>{
+    const newPrice = Number(document.getElementById('c-price').value)||0;
+    try{
+      await db.collection('appointments').doc(id).update({ status:'done', price: newPrice });
+      closeModal(); showToast('تم تسجيل الدخل بنجاح');
+    }catch(e){ showToast('حصل خطأ في الحفظ'); }
+  };
+}
+
+function openServiceModal(id){
+  const s = id ? state.services.find(x=>x.id===id) : null;
+  openModal(`
+    <h3>${s? 'تعديل الخدمة' : 'خدمة جديدة'}</h3>
+    <div class="field"><label>اسم الخدمة</label><input id="s-name" value="${s? escapeHtml(s.name):''}"></div>
+    <div class="field"><label>السعر (جنيه)</label><input type="number" id="s-price" value="${s? s.price:''}"></div>
+    <div class="sheet-actions">
+      <button class="btn btn-gold" id="save-service">حفظ</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>
+  `);
+  document.getElementById('save-service').onclick = async ()=>{
+    const name = document.getElementById('s-name').value.trim();
+    const price = Number(document.getElementById('s-price').value)||0;
+    if(!name){ showToast('اكتبي اسم الخدمة'); return; }
+    try{
+      if(s){ await db.collection('services').doc(s.id).update({ name, price }); }
+      else{ await db.collection('services').add({ name, price }); }
+      closeModal(); showToast('تم الحفظ');
+    }catch(e){ showToast('حصل خطأ في الحفظ'); }
+  };
+}
+
+/* ---------- action handlers ---------- */
+function attachDynamicHandlers(){
+  document.querySelectorAll('[data-action="complete"]').forEach(b=>{
+    b.onclick = ()=> openCompleteModal(b.dataset.id);
+  });
+  document.querySelectorAll('[data-action="accept-booking"]').forEach(b=>{
+    b.onclick = async ()=>{
+      const a = state.appts.find(x=>x.id===b.dataset.id);
+      try{
+        await db.collection('appointments').doc(b.dataset.id).update({ status:'upcoming' });
+        showToast('تم قبول الحجز');
+        if(a && a.phone){
+          openWhatsApp(a.phone, `اهلاً ${a.name} 💚 تم تأكيد ميعادك في LOLA Nail Studio يوم ${fmtDateHuman(a.date)}${a.time? ' الساعة ' + a.time : ''}. في انتظارك!`);
+        }
+      }catch(e){ showToast('حصل خطأ'); }
+    };
+  });
+  document.querySelectorAll('[data-action="reject-booking"]').forEach(b=>{
+    b.onclick = ()=>{
+      const a = state.appts.find(x=>x.id===b.dataset.id);
+      confirmAction('تأكيد رفض هذا الحجز؟', async ()=>{
+        try{
+          await db.collection('appointments').doc(b.dataset.id).update({ status:'cancelled' });
+          showToast('تم رفض الحجز');
+          if(a && a.phone){
+            openWhatsApp(a.phone, `اهلاً ${a.name}، للأسف مش هيكون في إمكانية تأكيد ميعادك يوم ${fmtDateHuman(a.date)}${a.time? ' الساعة ' + a.time : ''} في LOLA Nail Studio. تقدري تختاري ميعاد تاني من رابط الحجز وهنكون سعداء بخدمتك 💚`);
+          }
+        }catch(e){ showToast('حصل خطأ'); }
+      });
+    };
+  });
+  document.querySelectorAll('[data-action="delete-appt"]').forEach(b=>{
+    b.onclick = ()=>{
+      confirmAction('تأكيد حذف هذا الموعد؟', async ()=>{
+        try{ await db.collection('appointments').doc(b.dataset.id).delete(); showToast('تم الحذف'); }
+        catch(e){ showToast('حصل خطأ في الحذف'); }
+      });
+    };
+  });
+  document.querySelectorAll('[data-action="edit-service"]').forEach(b=>{
+    b.onclick = ()=> openServiceModal(b.dataset.id);
+  });
+  document.querySelectorAll('[data-action="delete-service"]').forEach(b=>{
+    b.onclick = ()=>{
+      confirmAction('حذف هذه الخدمة؟', async ()=>{
+        try{ await db.collection('services').doc(b.dataset.id).delete(); showToast('تم الحذف'); }
+        catch(e){ showToast('حصل خطأ في الحذف'); }
+      });
+    };
+  });
+  const addSvcBtn = document.querySelector('[data-action="add-service"]');
+  if(addSvcBtn) addSvcBtn.onclick = ()=> openServiceModal(null);
+
+  const exportBtn = document.querySelector('[data-action="export-backup"]');
+  if(exportBtn) exportBtn.onclick = exportBackup;
+  const importBtn = document.querySelector('[data-action="import-backup"]');
+  if(importBtn) importBtn.onclick = openImportModal;
+
+  document.querySelectorAll('.chip').forEach(c=>{
+    c.onclick = ()=>{ state.filter = c.dataset.filter; render(); };
+  });
+}
+
+/* ---------- backup / restore ---------- */
+function exportBackup(){
+  const backup = {
+    app: 'LOLA Nail Studio',
+    exportedAt: new Date().toISOString(),
+    services: state.services,
+    appts: state.appts
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = todayStr();
+  a.href = url;
+  a.download = `lola-backup-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('تم تنزيل النسخة الاحتياطية');
+}
+
+function openImportModal(){
+  openModal(`
+    <h3>استعادة نسخة احتياطية</h3>
+    <div style="font-size:13px; color:var(--green); opacity:.85; margin:8px 0 14px; line-height:1.6;">
+      اختاري ملف النسخة الاحتياطية (JSON) اللي نزلتيه قبل كده. هيتم استبدال كل البيانات الحالية بالبيانات اللي في الملف.
+    </div>
+    <input type="file" id="backup-file-input" accept="application/json" style="width:100%; margin-bottom:14px;">
+    <div class="sheet-actions">
+      <button class="btn btn-gold" id="confirm-import-btn">استعادة</button>
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+    </div>
+  `);
+  document.getElementById('confirm-import-btn').onclick = handleImportFile;
+}
+
+function handleImportFile(){
+  const input = document.getElementById('backup-file-input');
+  const file = input.files && input.files[0];
+  if(!file){ showToast('اختاري ملف أولاً'); return; }
+  const reader = new FileReader();
+  reader.onload = async (e)=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!Array.isArray(data.services) || !Array.isArray(data.appts)){
+        showToast('الملف غير صالح'); return;
+      }
+      confirmAction('هيتم استبدال كل البيانات الحالية. متأكدة؟', async ()=>{
+        try{
+          const delBatch = db.batch();
+          const svcSnap = await db.collection('services').get();
+          svcSnap.forEach(d=>delBatch.delete(d.ref));
+          const apptSnap = await db.collection('appointments').get();
+          apptSnap.forEach(d=>delBatch.delete(d.ref));
+          await delBatch.commit();
+
+          const addBatch = db.batch();
+          data.services.forEach(s=>{
+            const { id, ...rest } = s;
+            addBatch.set(db.collection('services').doc(id || uid()), rest);
+          });
+          data.appts.forEach(a=>{
+            const { id, ...rest } = a;
+            addBatch.set(db.collection('appointments').doc(id || uid()), rest);
+          });
+          await addBatch.commit();
+          closeModal();
+          showToast('تم استعادة البيانات بنجاح');
+        }catch(err){ showToast('حصل خطأ في الاستعادة'); }
+      });
+    }catch(err){
+      showToast('حصل خطأ في قراءة الملف');
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- nav & fab ---------- */
+document.querySelectorAll('.bottomnav button').forEach(b=>{
+  b.addEventListener('click', ()=>{ state.tab = b.dataset.tab; render(); });
+});
+document.getElementById('fab').addEventListener('click', ()=>{
+  if(state.tab==='revenue') openWalkinModal();
+  else openAppointmentModal();
+});
+
+/* ---------- init ---------- */
+(async function init(){
+  await loadData();
+  render();
+})();
+</script>
+</body>
+</html>
